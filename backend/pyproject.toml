@@ -1,0 +1,38 @@
+# Tooling configuration for the backend (Python) project.
+#
+# Only [tool.*] tables live here for now; the Django project metadata,
+# dependencies, and build config are added when the backend is initialized
+# (see roadmap). Keeping config here lets ruff/black discover it from the
+# repo's pre-commit hooks.
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["migrations", "**/migrations/*"]
+
+[tool.ruff.lint]
+# A pragmatic, not-overbearing rule set. Tune as the codebase grows.
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "I",   # isort (import ordering)
+  "B",   # flake8-bugbear
+  "UP",  # pyupgrade
+  "C4",  # flake8-comprehensions
+  "DJ",  # flake8-django
+  "SIM", # flake8-simplify
+  "RUF", # ruff-specific
+]
+# black owns line wrapping; don't double-report long lines it can't split.
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"] # re-exports
+
+[tool.ruff.lint.isort]
+known-first-party = ["websentinel"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+extend-exclude = "migrations"

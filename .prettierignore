@@ -1,0 +1,12 @@
+# Python is formatted by black, not prettier.
+backend/
+
+# Generated / vendored.
+node_modules/
+frontend/dist/
+frontend/build/
+**/*.min.js
+**/*.min.css
+
+# GitHub Actions YAML uses the `on:` key, which prettier would re-quote.
+.github/
