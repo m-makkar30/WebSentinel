@@ -43,8 +43,16 @@ apart from cosmetic churn (rotating ads, footer dates, session IDs).
 
 ## Getting started
 
-A one-command bring-up (`docker compose up`) lands in a later commit. For now the
-repo carries project tooling and structure.
+```bash
+cp .env.example .env            # then edit values as needed
+docker compose up -d postgres redis
+```
+
+This brings up the datastores — PostgreSQL (with the `pgvector` extension
+enabled on first boot) and Redis — both with healthchecks. Application services
+(Django API, Celery worker + beat, Playwright fetch worker, frontend) join this
+same stack in later commits, at which point `docker compose up` runs the whole
+system.
 
 ### Developer tooling
 
