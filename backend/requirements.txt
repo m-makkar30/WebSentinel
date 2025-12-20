@@ -1,0 +1,7 @@
+# Runtime dependencies for the WebSentinel backend.
+# Pinned with compatible-release ranges; tooling config lives in pyproject.toml.
+
+Django>=5.1,<6.0
+djangorestframework>=3.15,<4.0
+django-environ>=0.11,<1.0
+psycopg[binary]>=3.2,<4.0

@@ -49,6 +49,37 @@ services:
       start_period: 5s
     restart: unless-stopped
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://websentinel:websentinel@postgres:5432/websentinel}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      # Dev convenience: live code reload via runserver.
+      - ./backend:/app
+    command:
+      ["sh", "-c", "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8000/healthz").read()''',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
 volumes:
   pgdata:
   redisdata:
