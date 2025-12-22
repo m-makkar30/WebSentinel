@@ -24,7 +24,9 @@ select = [
   "RUF", # ruff-specific
 ]
 # black owns line wrapping; don't double-report long lines it can't split.
-ignore = ["E501"]
+# RUF012: Django Meta/admin options are idiomatically plain lists/tuples;
+# annotating them with typing.ClassVar is non-idiomatic noise.
+ignore = ["E501", "RUF012"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"] # re-exports
