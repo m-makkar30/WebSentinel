@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third-party
     "rest_framework",
+    "django_filters",
+    "drf_spectacular",
     # Local
     "core",
     "monitoring",
@@ -108,4 +110,19 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# --- OpenAPI (drf-spectacular) ------------------------------------------------
+SPECTACULAR_SETTINGS = {
+    "TITLE": "WebSentinel API",
+    "DESCRIPTION": "Web change-intelligence platform — watch targets, snapshots, "
+    "detected changes, and alerts.",
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
