@@ -52,6 +52,10 @@ db.sqlite3-journal
 media/
 staticfiles/
 
+# Celery
+celerybeat-schedule*
+celerybeat.pid
+
 # ---- Node / frontend ----
 node_modules/
 frontend/dist/
