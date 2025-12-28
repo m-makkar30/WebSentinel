@@ -96,9 +96,11 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# --- Static -------------------------------------------------------------------
+# --- Static / media -----------------------------------------------------------
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -129,6 +131,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "core.heartbeat",
         "schedule": 30.0,  # seconds; proves the beat -> worker loop
     },
+}
+# Browser rendering runs on a dedicated queue served by the Playwright worker.
+CELERY_TASK_ROUTES = {
+    "monitoring.render_url": {"queue": "fetch"},
 }
 
 # --- OpenAPI (drf-spectacular) ------------------------------------------------
