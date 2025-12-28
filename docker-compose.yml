@@ -125,6 +125,10 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgres://websentinel:websentinel@postgres:5432/websentinel}
+      # Playwright's sync API leaves an asyncio loop in the worker thread, which
+      # trips Django's async-safety guard on the (genuinely synchronous) ORM
+      # writes that follow a render. Safe to disable here: this worker is sync.
+      DJANGO_ALLOW_ASYNC_UNSAFE: "true"
     # Consumes the `fetch` queue; runs Chromium via Playwright.
     command:
       [

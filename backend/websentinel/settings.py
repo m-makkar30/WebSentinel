@@ -132,9 +132,10 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 30.0,  # seconds; proves the beat -> worker loop
     },
 }
-# Browser rendering runs on a dedicated queue served by the Playwright worker.
+# Fetch/render tasks run on a dedicated queue served by the Playwright worker.
 CELERY_TASK_ROUTES = {
     "monitoring.render_url": {"queue": "fetch"},
+    "monitoring.check_target": {"queue": "fetch"},
 }
 
 # --- OpenAPI (drf-spectacular) ------------------------------------------------

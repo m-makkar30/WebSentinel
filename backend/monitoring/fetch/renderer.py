@@ -22,14 +22,9 @@ from django.conf import settings
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
-logger = logging.getLogger(__name__)
+from .constants import USER_AGENT
 
-# A realistic, honest user-agent: a normal Chrome UA with a WebSentinel token so
-# site owners can identify the monitor in their logs.
-DEFAULT_USER_AGENT = (
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/120.0.0.0 Safari/537.36 WebSentinel/0.1 (+monitoring)"
-)
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -61,7 +56,7 @@ class PlaywrightRenderer:
             args=["--no-sandbox", "--disable-dev-shm-usage"],
         )
         self._context = self._browser.new_context(
-            user_agent=DEFAULT_USER_AGENT,
+            user_agent=USER_AGENT,
             viewport={"width": 1366, "height": 900},
             locale="en-US",
         )
