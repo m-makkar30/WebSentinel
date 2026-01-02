@@ -18,14 +18,25 @@ def check_target(target_uuid: str) -> dict:
     """
     target = WatchTarget.objects.get(uuid=target_uuid)
     snapshot = fetcher.check_target(target)
+
+    # Structured extraction on a successful, non-blocked fetch.
+    if snapshot.ok and not snapshot.blocked and snapshot.content_text:
+        try:
+            from .extract.extractor import extract as extract_snapshot
+
+            extract_snapshot(snapshot)
+        except Exception:
+            logger.exception("extraction failed for %s", target.url)
+
     logger.info(
-        "checked %s -> method=%s ok=%s blocked=%s status=%s hash=%s",
+        "checked %s -> method=%s ok=%s blocked=%s status=%s hash=%s fields=%d",
         target.url,
         snapshot.fetch_method,
         snapshot.ok,
         snapshot.blocked,
         snapshot.http_status,
         snapshot.content_hash[:12] or "-",
+        len(snapshot.extracted or {}),
     )
     return {
         "target": str(target.uuid),
@@ -36,6 +47,7 @@ def check_target(target_uuid: str) -> dict:
         "http_status": snapshot.http_status,
         "content_chars": len(snapshot.content_text),
         "content_hash": snapshot.content_hash,
+        "extracted": snapshot.extracted,
     }
 
 
