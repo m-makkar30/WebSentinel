@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # Local
     "core",
     "monitoring",
+    "llm",
 ]
 
 MIDDLEWARE = [
@@ -137,6 +138,20 @@ CELERY_TASK_ROUTES = {
     "monitoring.render_url": {"queue": "fetch"},
     "monitoring.check_target": {"queue": "fetch"},
 }
+
+# --- LLM provider (NVIDIA NIM) ------------------------------------------------
+# NVIDIA's API is OpenAI-compatible. Leave NVIDIA_API_KEY unset to disable LLM
+# features (the pipeline falls back to rule-based behavior).
+NVIDIA_API_KEY = env("NVIDIA_API_KEY", default="")
+NVIDIA_BASE_URL = env("NVIDIA_BASE_URL", default="https://integrate.api.nvidia.com/v1")
+# Model routing: cheap/fast for routine extraction, stronger for assessment.
+LLM_MODEL_EXTRACT = env("LLM_MODEL_EXTRACT", default="meta/llama-3.1-8b-instruct")
+LLM_MODEL_ASSESS = env("LLM_MODEL_ASSESS", default="meta/llama-3.3-70b-instruct")
+LLM_EMBED_MODEL = env("LLM_EMBED_MODEL", default="nvidia/nv-embedqa-e5-v5")
+LLM_MAX_TOKENS = env.int("LLM_MAX_TOKENS", default=1024)
+LLM_TEMPERATURE = env.float("LLM_TEMPERATURE", default=0.2)
+LLM_TIMEOUT = env.float("LLM_TIMEOUT", default=30.0)
+LLM_MAX_RETRIES = env.int("LLM_MAX_RETRIES", default=3)
 
 # --- OpenAPI (drf-spectacular) ------------------------------------------------
 SPECTACULAR_SETTINGS = {
