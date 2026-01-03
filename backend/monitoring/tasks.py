@@ -19,8 +19,9 @@ def check_target(target_uuid: str) -> dict:
     target = WatchTarget.objects.get(uuid=target_uuid)
     snapshot = fetcher.check_target(target)
 
-    # Structured extraction on a successful, non-blocked fetch.
+    change = None
     if snapshot.ok and not snapshot.blocked and snapshot.content_text:
+        # Structured extraction.
         try:
             from .extract.extractor import extract as extract_snapshot
 
@@ -28,8 +29,16 @@ def check_target(target_uuid: str) -> dict:
         except Exception:
             logger.exception("extraction failed for %s", target.url)
 
+        # Change detection (naive baseline; semantic detection lands next commit).
+        try:
+            from .diff.naive import detect_naive
+
+            change = detect_naive(target, snapshot)
+        except Exception:
+            logger.exception("change detection failed for %s", target.url)
+
     logger.info(
-        "checked %s -> method=%s ok=%s blocked=%s status=%s hash=%s fields=%d",
+        "checked %s -> method=%s ok=%s blocked=%s status=%s hash=%s fields=%d change=%s",
         target.url,
         snapshot.fetch_method,
         snapshot.ok,
@@ -37,6 +46,7 @@ def check_target(target_uuid: str) -> dict:
         snapshot.http_status,
         snapshot.content_hash[:12] or "-",
         len(snapshot.extracted or {}),
+        change.id if change else None,
     )
     return {
         "target": str(target.uuid),
@@ -48,6 +58,7 @@ def check_target(target_uuid: str) -> dict:
         "content_chars": len(snapshot.content_text),
         "content_hash": snapshot.content_hash,
         "extracted": snapshot.extracted,
+        "change_id": change.id if change else None,
     }
 
 
