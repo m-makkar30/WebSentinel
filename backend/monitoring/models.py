@@ -16,6 +16,7 @@ from __future__ import annotations
 import uuid
 
 from django.db import models
+from pgvector.django import VectorField
 
 
 # --- Enums --------------------------------------------------------------------
@@ -147,6 +148,11 @@ class Snapshot(models.Model):
 
     # Structured fields pulled out per the target's extraction schema.
     extracted = models.JSONField(default=dict, blank=True)
+
+    # Embedding of the content text for semantic-diff similarity (pgvector).
+    # Dimension matches the default NVIDIA embedding model (nv-embedqa-e5-v5).
+    # Null when the LLM provider isn't configured.
+    embedding = VectorField(dimensions=1024, null=True, blank=True)
 
     screenshot_path = models.CharField(max_length=500, blank=True)
     fetch_duration_ms = models.PositiveIntegerField(null=True, blank=True)

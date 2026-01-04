@@ -153,6 +153,13 @@ LLM_TEMPERATURE = env.float("LLM_TEMPERATURE", default=0.2)
 LLM_TIMEOUT = env.float("LLM_TIMEOUT", default=30.0)
 LLM_MAX_RETRIES = env.int("LLM_MAX_RETRIES", default=3)
 
+# --- Semantic diff thresholds -------------------------------------------------
+# Prose change is meaningful only when normalized-text similarity is below this
+# and (when available) embedding similarity is below the embedding threshold.
+DIFF_TEXT_SIM_THRESHOLD = env.float("DIFF_TEXT_SIM_THRESHOLD", default=0.92)
+DIFF_EMBED_SIM_THRESHOLD = env.float("DIFF_EMBED_SIM_THRESHOLD", default=0.97)
+EMBED_CONTENT_LIMIT = env.int("EMBED_CONTENT_LIMIT", default=4000)
+
 # --- OpenAPI (drf-spectacular) ------------------------------------------------
 SPECTACULAR_SETTINGS = {
     "TITLE": "WebSentinel API",

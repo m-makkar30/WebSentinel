@@ -29,11 +29,12 @@ def check_target(target_uuid: str) -> dict:
         except Exception:
             logger.exception("extraction failed for %s", target.url)
 
-        # Change detection (naive baseline; semantic detection lands next commit).
+        # Semantic change detection (noise-suppressing). The naive detector
+        # remains available for the evaluation harness.
         try:
-            from .diff.naive import detect_naive
+            from .diff.semantic import semantic_detect
 
-            change = detect_naive(target, snapshot)
+            change = semantic_detect(target, snapshot)
         except Exception:
             logger.exception("change detection failed for %s", target.url)
 
