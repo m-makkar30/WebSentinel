@@ -38,6 +38,15 @@ def check_target(target_uuid: str) -> dict:
         except Exception:
             logger.exception("change detection failed for %s", target.url)
 
+        # Impact assessment + alert, only for meaningful changes.
+        if change is not None and change.is_meaningful:
+            try:
+                from .assess.assessor import assess_change
+
+                assess_change(change)
+            except Exception:
+                logger.exception("assessment failed for change %s", change.pk)
+
     logger.info(
         "checked %s -> method=%s ok=%s blocked=%s status=%s hash=%s fields=%d change=%s",
         target.url,
