@@ -5,6 +5,7 @@ backend/
 node_modules/
 frontend/dist/
 frontend/build/
+**/package-lock.json
 **/*.min.js
 **/*.min.css
 
