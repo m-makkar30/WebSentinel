@@ -15,10 +15,13 @@ Three signals, strongest first:
 from __future__ import annotations
 
 import difflib
+import hashlib
+import json
 import logging
 import math
 import re
 from dataclasses import dataclass, field
+from datetime import timedelta
 
 from django.conf import settings
 from django.utils import timezone
@@ -161,6 +164,15 @@ def _embedding_for(snapshot: Snapshot) -> list[float] | None:
     return vector
 
 
+def _dedup_hash(change_type: str, field_changes: list[dict], content_hash: str) -> str:
+    """Stable hash of a change's essence, for collapsing repeats."""
+    basis = f"{change_type}|{json.dumps(field_changes, sort_keys=True, default=str)}"
+    if not field_changes:
+        # Prose-only: distinguish distinct prose by content hash.
+        basis += f"|{content_hash or ''}"
+    return hashlib.sha256(basis.encode("utf-8")).hexdigest()
+
+
 def semantic_detect(target: WatchTarget, current: Snapshot) -> Change | None:
     """Compare ``current`` to the prior snapshot; record a Change if it differs."""
     previous = (
@@ -185,6 +197,14 @@ def semantic_detect(target: WatchTarget, current: Snapshot) -> Change | None:
     if not result.differs:
         return None
 
+    # Dedup: suppress an identical change seen recently for this target.
+    dedup = _dedup_hash(result.change_type, result.field_changes, current.content_hash)
+    window_hours = getattr(settings, "DEDUP_WINDOW_HOURS", 24)
+    since = timezone.now() - timedelta(hours=window_hours)
+    if Change.objects.filter(target=target, dedup_hash=dedup, detected_at__gte=since).exists():
+        logger.info("duplicate change suppressed for %s", target.url)
+        return None
+
     return Change.objects.create(
         target=target,
         previous_snapshot=previous,
@@ -197,4 +217,5 @@ def semantic_detect(target: WatchTarget, current: Snapshot) -> Change | None:
         summary=result.summary,
         field_diffs=result.field_changes,
         text_diff=diff_text(previous.content_text, current.content_text).text_diff,
+        dedup_hash=dedup,
     )

@@ -192,5 +192,22 @@ def persist_outcome(target: WatchTarget, outcome: FetchOutcome) -> Snapshot:
     return snapshot
 
 
-def check_target(target: WatchTarget) -> Snapshot:
-    return persist_outcome(target, fetch_target(target))
+def check_target(target: WatchTarget) -> Snapshot | None:
+    """Fetch a target, skipping storage + downstream work if content is unchanged.
+
+    Returns the new Snapshot, or None when the fetch succeeded but the content
+    hash matches the last snapshot (skip-unchanged: no duplicate row, no LLM).
+    """
+    outcome = fetch_target(target)
+
+    if outcome.ok and not outcome.blocked:
+        last = Snapshot.objects.filter(target=target, ok=True).order_by("-fetched_at").first()
+        if last and last.content_hash and last.content_hash == outcome.hash:
+            target.last_checked_at = timezone.now()
+            if target.status in (TargetStatus.BLOCKED, TargetStatus.ERROR):
+                target.status = TargetStatus.ACTIVE
+                target.status_note = ""
+            target.save(update_fields=["status", "status_note", "last_checked_at", "updated_at"])
+            return None
+
+    return persist_outcome(target, outcome)

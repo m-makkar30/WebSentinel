@@ -127,10 +127,16 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://redis:6379
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 300  # hard limit (s); fetch/LLM tasks tune this later
+DISPATCH_INTERVAL_SECONDS = env.int("DISPATCH_INTERVAL_SECONDS", default=60)
 CELERY_BEAT_SCHEDULE = {
     "heartbeat": {
         "task": "core.heartbeat",
-        "schedule": 30.0,  # seconds; proves the beat -> worker loop
+        "schedule": 30.0,  # seconds; liveness proof for the beat -> worker loop
+    },
+    # Per-target scheduling: enqueue checks for targets that are due.
+    "dispatch-due-checks": {
+        "task": "monitoring.dispatch_due_checks",
+        "schedule": float(DISPATCH_INTERVAL_SECONDS),
     },
 }
 # Fetch/render tasks run on a dedicated queue served by the Playwright worker.
@@ -159,6 +165,8 @@ LLM_MAX_RETRIES = env.int("LLM_MAX_RETRIES", default=3)
 DIFF_TEXT_SIM_THRESHOLD = env.float("DIFF_TEXT_SIM_THRESHOLD", default=0.92)
 DIFF_EMBED_SIM_THRESHOLD = env.float("DIFF_EMBED_SIM_THRESHOLD", default=0.97)
 EMBED_CONTENT_LIMIT = env.int("EMBED_CONTENT_LIMIT", default=4000)
+# Suppress an identical change seen again within this window.
+DEDUP_WINDOW_HOURS = env.int("DEDUP_WINDOW_HOURS", default=24)
 
 # --- OpenAPI (drf-spectacular) ------------------------------------------------
 SPECTACULAR_SETTINGS = {

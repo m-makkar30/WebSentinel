@@ -1,12 +1,37 @@
 import logging
+from datetime import timedelta
 
 from celery import shared_task
+from django.utils import timezone
 
 from .fetch import fetcher
 from .fetch.renderer import get_renderer
-from .models import WatchTarget
+from .models import TargetStatus, WatchTarget
 
 logger = logging.getLogger(__name__)
+
+
+@shared_task(name="monitoring.dispatch_due_checks")
+def dispatch_due_checks() -> dict:
+    """Beat-scheduled dispatcher: enqueue check_target for due active targets.
+
+    A target is due when it has never been checked, or its last check is older
+    than its own check_interval_minutes. This gives per-target cadence without
+    managing a periodic-task row per target.
+    """
+    now = timezone.now()
+    dispatched = 0
+    for target in WatchTarget.objects.filter(status=TargetStatus.ACTIVE).only(
+        "uuid", "last_checked_at", "check_interval_minutes"
+    ):
+        due = target.last_checked_at is None or (
+            now - target.last_checked_at >= timedelta(minutes=target.check_interval_minutes)
+        )
+        if due:
+            check_target.delay(str(target.uuid))
+            dispatched += 1
+    logger.info("dispatched %d due check(s)", dispatched)
+    return {"dispatched": dispatched}
 
 
 @shared_task(name="monitoring.check_target")
@@ -18,6 +43,11 @@ def check_target(target_uuid: str) -> dict:
     """
     target = WatchTarget.objects.get(uuid=target_uuid)
     snapshot = fetcher.check_target(target)
+
+    # Content-hash skip: unchanged page -> no snapshot, no downstream LLM work.
+    if snapshot is None:
+        logger.info("unchanged, skipped downstream work for %s", target.url)
+        return {"target": str(target.uuid), "skipped": True, "reason": "unchanged"}
 
     change = None
     if snapshot.ok and not snapshot.blocked and snapshot.content_text:
