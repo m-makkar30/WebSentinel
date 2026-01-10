@@ -22,4 +22,9 @@ export default tseslint.config(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     },
   },
+  {
+    // UI primitives intentionally re-export multiple things (variants, parts).
+    files: ["src/components/ui/**"],
+    rules: { "react-refresh/only-export-components": "off" },
+  },
 );

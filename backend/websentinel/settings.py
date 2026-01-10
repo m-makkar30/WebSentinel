@@ -16,7 +16,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),
-    DJANGO_ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1", "0.0.0.0"]),
+    # "backend" is the compose service name (the frontend dev proxy forwards
+    # requests with that Host header).
+    DJANGO_ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1", "0.0.0.0", "backend"]),
 )
 
 # When running outside Docker, load a repo-root .env if present. Inside Docker,
