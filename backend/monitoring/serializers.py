@@ -1,7 +1,7 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from .models import WatchTarget
+from .models import Change, Snapshot, WatchTarget
 
 
 class WatchTargetSerializer(serializers.ModelSerializer):
@@ -71,3 +71,44 @@ class WatchTargetSerializer(serializers.ModelSerializer):
         if not isinstance(value, dict):
             raise serializers.ValidationError('Must be a JSON object, e.g. {"price": "number"}.')
         return value
+
+
+class SnapshotMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Snapshot
+        fields = [
+            "id",
+            "fetched_at",
+            "fetch_method",
+            "http_status",
+            "screenshot_path",
+            "content_hash",
+        ]
+
+
+class ChangeSerializer(serializers.ModelSerializer):
+    target = serializers.UUIDField(source="target.uuid", read_only=True)
+    target_name = serializers.CharField(source="target.name", read_only=True)
+    previous_snapshot = SnapshotMiniSerializer(read_only=True)
+    current_snapshot = SnapshotMiniSerializer(read_only=True)
+
+    class Meta:
+        model = Change
+        fields = [
+            "id",
+            "target",
+            "target_name",
+            "detection_method",
+            "change_type",
+            "is_meaningful",
+            "severity",
+            "significance_score",
+            "summary",
+            "why_it_matters",
+            "field_diffs",
+            "text_diff",
+            "detected_at",
+            "previous_snapshot",
+            "current_snapshot",
+            "created_at",
+        ]

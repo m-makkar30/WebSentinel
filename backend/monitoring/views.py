@@ -6,8 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from .models import AlertStatus, TargetStatus, WatchTarget
-from .serializers import WatchTargetSerializer
+from .models import AlertStatus, Change, TargetStatus, WatchTarget
+from .serializers import ChangeSerializer, WatchTargetSerializer
 
 
 @extend_schema(tags=["targets"])
@@ -59,3 +59,23 @@ class WatchTargetViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def resume(self, request: Request, uuid: str | None = None) -> Response:
         return self._set_status(request, TargetStatus.ACTIVE)
+
+
+@extend_schema(tags=["changes"])
+class ChangeViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only access to detected changes (powers the timeline + diff viewer)."""
+
+    serializer_class = ChangeSerializer
+    queryset = Change.objects.select_related(
+        "target", "previous_snapshot", "current_snapshot"
+    ).all()
+    filterset_fields = [
+        "target__uuid",
+        "is_meaningful",
+        "severity",
+        "change_type",
+        "detection_method",
+    ]
+    search_fields = ["summary", "why_it_matters"]
+    ordering_fields = ["detected_at", "severity", "significance_score"]
+    ordering = ["-detected_at"]
