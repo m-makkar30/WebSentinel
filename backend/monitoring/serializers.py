@@ -1,7 +1,7 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from .models import Change, Snapshot, WatchTarget
+from .models import Alert, Change, Snapshot, WatchTarget
 
 
 class WatchTargetSerializer(serializers.ModelSerializer):
@@ -110,5 +110,26 @@ class ChangeSerializer(serializers.ModelSerializer):
             "detected_at",
             "previous_snapshot",
             "current_snapshot",
+            "created_at",
+        ]
+
+
+class AlertSerializer(serializers.ModelSerializer):
+    target = serializers.UUIDField(source="target.uuid", read_only=True)
+    target_name = serializers.CharField(source="target.name", read_only=True)
+
+    class Meta:
+        model = Alert
+        fields = [
+            "id",
+            "target",
+            "target_name",
+            "change",
+            "kind",
+            "level",
+            "title",
+            "body",
+            "status",
+            "acknowledged_at",
             "created_at",
         ]

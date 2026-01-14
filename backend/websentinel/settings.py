@@ -177,4 +177,6 @@ SPECTACULAR_SETTINGS = {
     "detected changes, and alerts.",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # Severity is reused by Change.severity and Alert.level; name the enum once.
+    "ENUM_NAME_OVERRIDES": {"SeverityEnum": "monitoring.models.Severity.choices"},
 }
