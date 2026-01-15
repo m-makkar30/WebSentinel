@@ -4,9 +4,9 @@ from datetime import timedelta
 from celery import shared_task
 from django.utils import timezone
 
-from .fetch import fetcher
 from .fetch.renderer import get_renderer
 from .models import TargetStatus, WatchTarget
+from .pipeline import process_target
 
 logger = logging.getLogger(__name__)
 
@@ -36,70 +36,9 @@ def dispatch_due_checks() -> dict:
 
 @shared_task(name="monitoring.check_target")
 def check_target(target_uuid: str) -> dict:
-    """Polite fetch of one target: persists a Snapshot, handles blocks/errors.
-
-    Routed to the `fetch` queue. Extraction and change detection are layered on
-    top of this in later commits.
-    """
+    """Run the full check pipeline for one target. Routed to the `fetch` queue."""
     target = WatchTarget.objects.get(uuid=target_uuid)
-    snapshot = fetcher.check_target(target)
-
-    # Content-hash skip: unchanged page -> no snapshot, no downstream LLM work.
-    if snapshot is None:
-        logger.info("unchanged, skipped downstream work for %s", target.url)
-        return {"target": str(target.uuid), "skipped": True, "reason": "unchanged"}
-
-    change = None
-    if snapshot.ok and not snapshot.blocked and snapshot.content_text:
-        # Structured extraction.
-        try:
-            from .extract.extractor import extract as extract_snapshot
-
-            extract_snapshot(snapshot)
-        except Exception:
-            logger.exception("extraction failed for %s", target.url)
-
-        # Semantic change detection (noise-suppressing). The naive detector
-        # remains available for the evaluation harness.
-        try:
-            from .diff.semantic import semantic_detect
-
-            change = semantic_detect(target, snapshot)
-        except Exception:
-            logger.exception("change detection failed for %s", target.url)
-
-        # Impact assessment + alert, only for meaningful changes.
-        if change is not None and change.is_meaningful:
-            try:
-                from .assess.assessor import assess_change
-
-                assess_change(change)
-            except Exception:
-                logger.exception("assessment failed for change %s", change.pk)
-
-    logger.info(
-        "checked %s -> method=%s ok=%s blocked=%s status=%s hash=%s fields=%d change=%s",
-        target.url,
-        snapshot.fetch_method,
-        snapshot.ok,
-        snapshot.blocked,
-        snapshot.http_status,
-        snapshot.content_hash[:12] or "-",
-        len(snapshot.extracted or {}),
-        change.id if change else None,
-    )
-    return {
-        "target": str(target.uuid),
-        "snapshot_id": snapshot.id,
-        "method": snapshot.fetch_method,
-        "ok": snapshot.ok,
-        "blocked": snapshot.blocked,
-        "http_status": snapshot.http_status,
-        "content_chars": len(snapshot.content_text),
-        "content_hash": snapshot.content_hash,
-        "extracted": snapshot.extracted,
-        "change_id": change.id if change else None,
-    }
+    return process_target(target)
 
 
 @shared_task(name="monitoring.render_url")

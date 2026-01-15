@@ -4,7 +4,7 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help hooks lint fmt
+.PHONY: help hooks lint fmt seed demo eval
 
 help: ## Show this help.
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -20,3 +20,12 @@ fmt: ## Auto-format the codebase (ruff --fix, black, prettier via hooks).
 	pre-commit run ruff --all-files || true
 	pre-commit run black --all-files || true
 	pre-commit run prettier --all-files || true
+
+seed: ## Seed monitoring-friendly demo targets.
+	docker compose exec backend python manage.py seed_demo
+
+demo: ## Seed demo targets and run real checks against them.
+	docker compose exec backend python manage.py run_demo
+
+eval: ## Run the evaluation harness and print the §9 metrics.
+	docker compose exec backend python manage.py run_eval

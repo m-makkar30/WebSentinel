@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 import hashlib
+import warnings
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
+
+# We deliberately use the html.parser on feeds too (no lxml dependency); it
+# extracts their text fine. Silence bs4's "this looks like XML" advisory.
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 _DROP_TAGS = ("script", "style", "noscript", "template", "svg")
 
