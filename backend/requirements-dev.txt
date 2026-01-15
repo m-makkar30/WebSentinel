@@ -1,0 +1,4 @@
+# Dev/test-only dependencies (not installed in the runtime images).
+-r requirements.txt
+pytest>=8.0,<9.0
+pytest-django>=4.8,<5.0

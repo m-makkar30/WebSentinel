@@ -38,3 +38,9 @@ known-first-party = ["websentinel"]
 line-length = 100
 target-version = ["py312"]
 extend-exclude = "migrations"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "websentinel.settings"
+python_files = ["test_*.py", "tests.py"]
+testpaths = ["evaluation"]
+addopts = "-q"
