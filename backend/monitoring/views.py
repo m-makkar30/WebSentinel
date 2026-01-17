@@ -14,8 +14,13 @@ from rest_framework.views import APIView
 
 from llm.models import LLMUsage
 
-from .models import Alert, AlertStatus, Change, TargetStatus, WatchTarget
-from .serializers import AlertSerializer, ChangeSerializer, WatchTargetSerializer
+from .models import Alert, AlertStatus, Change, CheckRun, TargetStatus, WatchTarget
+from .serializers import (
+    AlertSerializer,
+    ChangeSerializer,
+    CheckRunSerializer,
+    WatchTargetSerializer,
+)
 
 
 @extend_schema(tags=["targets"])
@@ -192,3 +197,14 @@ class StatsView(APIView):
                 },
             }
         )
+
+
+@extend_schema(tags=["runs"])
+class CheckRunViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only run history (powers the per-target Recent runs panel)."""
+
+    serializer_class = CheckRunSerializer
+    queryset = CheckRun.objects.all()
+    filterset_fields = ["target__uuid", "status"]
+    ordering_fields = ["started_at"]
+    ordering = ["-started_at"]

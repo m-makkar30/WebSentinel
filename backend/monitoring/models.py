@@ -250,3 +250,38 @@ class Alert(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"Alert<{self.kind} {self.level}: {self.title}>"
+
+
+class RunStatus(models.TextChoices):
+    OK = "ok", "OK"
+    SKIPPED = "skipped", "Skipped (unchanged)"
+    BLOCKED = "blocked", "Blocked"
+    ERROR = "error", "Error"
+
+
+class CheckRun(models.Model):
+    """One execution of the check pipeline for a target (run history)."""
+
+    target = models.ForeignKey(WatchTarget, on_delete=models.CASCADE, related_name="runs")
+    started_at = models.DateTimeField(db_index=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    duration_ms = models.PositiveIntegerField(null=True, blank=True)
+
+    status = models.CharField(max_length=10, choices=RunStatus.choices, default=RunStatus.OK)
+    fetch_method = models.CharField(max_length=10, blank=True)
+    http_status = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    snapshot = models.ForeignKey(
+        Snapshot, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    change = models.ForeignKey(
+        Change, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    error = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-started_at"]
+        indexes = [models.Index(fields=["target", "-started_at"])]
+
+    def __str__(self) -> str:
+        return f"CheckRun<{self.target_id} {self.status} @{self.started_at:%Y-%m-%d %H:%M}>"

@@ -9,6 +9,8 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from core.retry import retry_call
+
 from .constants import HTTP_HEADERS, HTTP_TIMEOUT, MIN_REQUEST_INTERVAL
 
 _last_request: dict[str, float] = {}
@@ -47,4 +49,12 @@ def pace(url: str) -> None:
 
 def get(url: str) -> httpx.Response:
     pace(url)
-    return _get_client().get(url)
+    client = _get_client()
+    # Retry only transient transport/timeout errors (not HTTP status codes,
+    # which are returned as responses and handled by block/error logic).
+    return retry_call(
+        lambda: client.get(url),
+        attempts=3,
+        base_delay=0.5,
+        exceptions=(httpx.TransportError,),
+    )

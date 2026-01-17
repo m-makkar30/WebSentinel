@@ -107,6 +107,27 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# --- Logging ------------------------------------------------------------------
+LOG_LEVEL = env("LOG_LEVEL", default="INFO")
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "structured": {
+            "format": "{asctime} {levelname:<7} {name}: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "structured"},
+    },
+    "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {
+        app: {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False}
+        for app in ("monitoring", "llm", "core", "celery", "django.request")
+    },
+}
+
 # --- DRF ----------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [

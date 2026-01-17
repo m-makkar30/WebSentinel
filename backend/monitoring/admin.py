@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Alert, Change, Snapshot, WatchTarget
+from .models import Alert, Change, CheckRun, Snapshot, WatchTarget
 
 
 @admin.register(WatchTarget)
@@ -46,3 +46,20 @@ class AlertAdmin(admin.ModelAdmin):
     search_fields = ("target__name", "title", "body")
     date_hierarchy = "created_at"
     autocomplete_fields = ("target", "change")
+
+
+@admin.register(CheckRun)
+class CheckRunAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "target",
+        "status",
+        "fetch_method",
+        "http_status",
+        "duration_ms",
+        "started_at",
+    )
+    list_filter = ("status", "fetch_method")
+    search_fields = ("target__name", "error")
+    date_hierarchy = "started_at"
+    autocomplete_fields = ("target",)

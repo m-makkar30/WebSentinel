@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, ArrowLeft, ExternalLink, Inbox } from "lucide-react";
+import { AlertCircle, AlertTriangle, ArrowLeft, ExternalLink, Inbox } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { DiffView } from "@/components/changes/DiffView";
+import { RunHistory } from "@/components/RunHistory";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
@@ -80,7 +81,30 @@ export function TargetDetail() {
                   : "never checked"}
               </p>
             )}
+            {uuid && <RunHistory targetUuid={uuid} />}
           </div>
+
+          {target &&
+            (target.status === "error" || target.status === "blocked") &&
+            target.status_note && (
+              <Card
+                className={cn(
+                  "flex items-start gap-2 p-3 text-sm",
+                  target.status === "error" ? "border-destructive/40" : "border-amber-500/40",
+                )}
+              >
+                <AlertTriangle
+                  className={cn(
+                    "mt-0.5 h-4 w-4 shrink-0",
+                    target.status === "error" ? "text-destructive" : "text-amber-600",
+                  )}
+                />
+                <span>
+                  <span className="font-medium capitalize">{target.status}:</span>{" "}
+                  {target.status_note}
+                </span>
+              </Card>
+            )}
 
           <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
             <div className="space-y-2">

@@ -1,7 +1,7 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from .models import Alert, Change, Snapshot, WatchTarget
+from .models import Alert, Change, CheckRun, Snapshot, WatchTarget
 
 
 class WatchTargetSerializer(serializers.ModelSerializer):
@@ -132,4 +132,21 @@ class AlertSerializer(serializers.ModelSerializer):
             "status",
             "acknowledged_at",
             "created_at",
+        ]
+
+
+class CheckRunSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CheckRun
+        fields = [
+            "id",
+            "started_at",
+            "finished_at",
+            "duration_ms",
+            "status",
+            "fetch_method",
+            "http_status",
+            "snapshot",
+            "change",
+            "error",
         ]
